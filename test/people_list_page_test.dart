@@ -1,13 +1,14 @@
 import 'package:employees_catalogue/data/api.dart';
 import 'package:employees_catalogue/data/component.dart';
-import 'package:employees_catalogue/people_list_page.dart';
+import 'package:employees_catalogue/data/extensions.dart';
+import 'package:employees_catalogue/data/person.dart';
 import 'package:employees_catalogue/main.dart';
 import 'package:employees_catalogue/person_details_page.dart';
 import 'package:employees_catalogue/widget_keys.dart';
+import 'package:employees_catalogue/widgets/leading_widget.dart';
+import 'package:employees_catalogue/widgets/person_item_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:employees_catalogue/data/person.dart';
-import 'package:employees_catalogue/data/extensions.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'mock_classes.dart';
@@ -28,7 +29,8 @@ void main() {
       responsibility: any(named: 'responsibility'))).thenAnswer((realInvocation) => []);
   when(() => api.getPerson(1)).thenAnswer((realInvocation) => Api().getPerson(1));
 
-  testWidgets('shouldDisplayTheSameAmountOfPeopleAsInPeopleDataSourceSampleData', (WidgetTester tester) async {
+  testWidgets('shouldDisplayTheSameAmountOfPeopleAsInPeopleDataSourceSampleData',
+      (WidgetTester tester) async {
     await tester.pumpWidget(MyApp());
 
     expect(find.byKey(WidgetKey.listOfPeople), findsOneWidget);
@@ -46,7 +48,8 @@ void main() {
           findsOneWidget);
       expect(
           find.descendant(
-              of: find.byKey(WidgetKey.listOfPeople), matching: find.text(element.responsibility.toNameString())),
+              of: find.byKey(WidgetKey.listOfPeople),
+              matching: find.text(element.responsibility.toNameString())),
           findsWidgets);
     });
   });
@@ -61,7 +64,8 @@ void main() {
           findsOneWidget);
       expect(
           find.descendant(
-              of: find.byKey(WidgetKey.listOfPeople), matching: find.text(element.responsibility.toNameString())),
+              of: find.byKey(WidgetKey.listOfPeople),
+              matching: find.text(element.responsibility.toNameString())),
           findsWidgets);
     });
 
@@ -91,18 +95,20 @@ void main() {
 
     expect(
         find.descendant(
-            of: find.byKey(WidgetKey.listOfPeople), matching: find.text(Responsibility.Accounting.toNameString())),
+            of: find.byKey(WidgetKey.listOfPeople),
+            matching: find.text(Responsibility.Accounting.toNameString())),
         findsOneWidget);
     expect(
         find.descendant(
-            of: find.byKey(WidgetKey.listOfPeople), matching: find.text(Responsibility.DevOps.toNameString())),
+            of: find.byKey(WidgetKey.listOfPeople),
+            matching: find.text(Responsibility.DevOps.toNameString())),
         findsNothing);
   });
 
   testWidgets('showPeopleThatNameContainsQuery', (WidgetTester tester) async {
     when(() => api.searchPeople(
-        query: any(that: equals('bur'), named: 'query'),
-        responsibility: any(named: 'responsibility'))).thenAnswer((realInvocation) => Api().searchPeople(query: 'bur'));
+            query: any(that: equals('bur'), named: 'query'), responsibility: any(named: 'responsibility')))
+        .thenAnswer((realInvocation) => Api().searchPeople(query: 'bur'));
 
     await tester.pumpWidget(MyApp());
     await tester.tap(find.byType(LeadingWidget));

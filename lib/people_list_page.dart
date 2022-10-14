@@ -1,9 +1,11 @@
 import 'package:employees_catalogue/data/component.dart';
+import 'package:employees_catalogue/data/extensions.dart';
 import 'package:employees_catalogue/data/person.dart';
 import 'package:employees_catalogue/person_details_page.dart';
 import 'package:employees_catalogue/widget_keys.dart';
+import 'package:employees_catalogue/widgets/leading_widget.dart';
+import 'package:employees_catalogue/widgets/person_item_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:employees_catalogue/data/extensions.dart';
 
 class PeopleListPage extends StatefulWidget {
   final String title;
@@ -16,6 +18,7 @@ class PeopleListPage extends StatefulWidget {
 
 class _PeopleListPageState extends State<PeopleListPage> {
   late List<Person> people;
+  List<Person>? searched;
   late TextEditingController _searchController;
   bool _isSearching = false;
   Responsibility? responsibilityFilter;
@@ -46,13 +49,25 @@ class _PeopleListPageState extends State<PeopleListPage> {
           leading: LeadingWidget(
             isSearching: _isSearching,
             onClick: () {
-              // TODO
+              _isSearching = !_isSearching;
+              setState(() {});
             },
           ),
           title: _isSearching
               ? TextField(
                   key: WidgetKey.search,
                   controller: _searchController,
+                  onChanged: (text) {
+                    previousQuery = text;
+                    searched = people
+                        .where(
+                            (element) => element.responsibility.toNameString().toLowerCase().contains(text))
+                        .toList();
+                    if (text.isEmpty) {
+                      searched = null;
+                    }
+                    setState(() {});
+                  },
                   autofocus: true,
                   decoration: InputDecoration(
                     hintText: "Search employee...",
@@ -72,58 +87,64 @@ class _PeopleListPageState extends State<PeopleListPage> {
                       child: Text('CLEAR'),
                     )),
                     onTap: () {
-                      // TODO
+                      responsibilityFilter = null;
+                      searched = null;
+                      setState(() {});
                     },
                   )
                 : PopupMenuButton<Responsibility>(
                     key: WidgetKey.filter,
                     icon: Icon(Icons.filter_list),
                     onSelected: (responsibility) {
-                      // TODO
+                      responsibilityFilter = responsibility;
+                      searched = people
+                          .where((element) =>
+                              element.responsibility.toNameString() == responsibility.toNameString())
+                          .toList();
+                      setState(() {});
                     },
                     itemBuilder: (BuildContext context) {
-                      throw UnimplementedError(); // TODO
+                      return <PopupMenuItem<Responsibility>>[
+                        ...Responsibility.values
+                            .map(
+                              (Responsibility e) =>
+                                  PopupMenuItem<Responsibility>(child: Text(e.toNameString()), value: e),
+                            )
+                            .toList()
+                      ];
                     },
                   )
           ],
         ),
-        body: ListView.builder(
-          key: WidgetKey.listOfPeople,
-          itemBuilder: (context, index) {
-            throw UnimplementedError(); // TODO
+        body: buildListView());
+  }
+
+  void filterByResponsibility({String? responsibility}) {
+    people.sort((a, b) => (a.responsibility.toNameString()).compareTo(b.responsibility.toNameString()));
+    searched?.sort(
+        (a, b) => a.responsibility.toNameString().toString().compareTo(b.responsibility.toNameString()));
+  }
+
+  Widget buildListView() {
+    final currentList = searched ?? people;
+    return ListView.builder(
+      key: WidgetKey.listOfPeople,
+      itemBuilder: (context, index) {
+        final person = currentList[index];
+        return InkWell(
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => PersonDetailsPage(personId: person.id),
+            ));
           },
-          itemCount: people.length,
-        ));
-  }
-}
-
-class LeadingWidget extends StatelessWidget {
-  final bool isSearching;
-  final Function() onClick;
-
-  const LeadingWidget({Key? key, this.isSearching = false, required this.onClick}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: isSearching ? const Icon(Icons.clear) : const Icon(Icons.search),
-      onPressed: () {
-        onClick();
+          child: PersonItemWidget(
+            id: person.id,
+            fullName: person.fullName,
+            responsibility: person.responsibility.toNameString(),
+          ),
+        );
       },
+      itemCount: currentList.length,
     );
-  }
-}
-
-class PersonItemWidget extends StatelessWidget {
-  final int id;
-  final String fullName;
-  final String responsibility;
-
-  const PersonItemWidget({Key? key, required this.id, required this.fullName, this.responsibility = ''})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    throw UnimplementedError(); // TODO
   }
 }
